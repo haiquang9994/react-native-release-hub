@@ -33,7 +33,11 @@ npx pod-install
 
 ### iOS Integration
 
-Open your `ios/AppDelegate.mm` (or `AppDelegate.m`) file. Import `ReleaseHub.h` and update your bridge's `sourceURLForBridge:` method:
+Open your iOS project files to configure bundle loading.
+
+#### Option A: For Objective-C++ (`AppDelegate.mm` or `AppDelegate.m`)
+
+Import `ReleaseHub.h` and update your bridge's `sourceURLForBridge:` method (or `bundleURL` method depending on React Native version):
 
 ```objc
 #import "ReleaseHub.h"
@@ -50,11 +54,32 @@ Open your `ios/AppDelegate.mm` (or `AppDelegate.m`) file. Import `ReleaseHub.h` 
 }
 ```
 
+#### Option B: For Swift (`AppDelegate.swift`)
+
+Import `react_native_release_hub` and update the `bundleURL()` method:
+
+```swift
+import react_native_release_hub
+// ...
+
+override func bundleURL() -> URL? {
+#if DEBUG
+  return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+#else
+  // Resolve dynamic bundle URL or fall back to mainBundle
+  return ReleaseHub.bundleURL()
+#endif
+}
+```
+*Note: If your project does not use modular headers, add `#import "ReleaseHub.h"` to your app's Bridging Header file instead of using `import react_native_release_hub`.*
+
 ---
 
-### Android Integration
+Open your Android project files to configure bundle loading.
 
-1. Register the React Package in your `MainApplication` (typically located in `android/app/src/main/java/com/yourpackage/MainApplication.java` or `MainApplication.kt`):
+#### Option A: For Java / ReactNativeHost (Older React Native versions)
+
+1. Register the React Package in your `MainApplication.java`:
 
 ```java
 import com.releasehub.ReleaseHubPackage;
@@ -63,7 +88,7 @@ import com.releasehub.ReleaseHubPackage;
 @Override
 protected List<ReactPackage> getPackages() {
     List<ReactPackage> packages = new PackageList(this).getPackages();
-    packages.add(new ReleaseHubPackage()); // <-- Register ReleaseHub package
+    packages.add(new ReleaseHubPackage()); // <-- Register Package
     return packages;
 }
 ```
@@ -85,6 +110,32 @@ private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
     }
 };
 ```
+
+#### Option B: For Kotlin / ReactHost (React Native 0.73+)
+
+If your project is using modern React Native with Kotlin (`MainApplication.kt`), import `ReleaseHub` and pass the bundle file path to `getDefaultReactHost`:
+
+```kotlin
+import com.releasehub.ReleaseHub
+// ...
+
+class MainApplication : Application(), ReactApplication {
+
+  override val reactHost: ReactHost by lazy {
+    getDefaultReactHost(
+      context = applicationContext,
+      packageList =
+        PackageList(this).packages.apply {
+          // Packages that cannot be autolinked yet can be added manually here
+        },
+      jsBundleFilePath = ReleaseHub.getJSBundleFile(applicationContext), // <-- Pass ReleaseHub bundle path
+    )
+  }
+
+  // ...
+}
+```
+*Note: Because of autolinking, the `ReleaseHubPackage` is registered automatically and does not need to be added manually to `PackageList`.*
 
 ---
 
