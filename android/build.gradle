@@ -1,0 +1,39 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.1'
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 34
+    
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 34
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    
+    namespace "com.releasehub"
+}
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    // React Native dependency
+    //noinspection GradleDynamicVersion
+    implementation "com.facebook.react:react-native:+"
+}
